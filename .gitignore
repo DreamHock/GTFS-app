@@ -1,0 +1,13 @@
+# Node.js
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Ignore directories and their contents
+/data/
+/data/**
+/logs/
+/logs/**
+/var/
+/var/**

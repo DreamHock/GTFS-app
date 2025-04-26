@@ -8,10 +8,13 @@ services:
     restart: unless-stopped
     environment:
       - COMPOSER_MEMORY_LIMIT=-1
-      - MONGODB_URL=${MONGODB_URL}
-      - MONGODB_DB=${MONGODB_DB}
+      - MONGODB_URL=mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@172.27.0.2:27017/${MONGODB_DB}
     volumes:
       - ./src:/var/www
+      - ./src/var/cache:/var/www/var/cache
+    networks:
+      - default
+      - mongo_external_network
 
   nginx:
     image: nginx:alpine
@@ -24,6 +27,22 @@ services:
       - ./src:/var/www
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./logs:/var/log
+    networks:
+      - default
+  mailpit:
+    image: axllent/mailpit
+    container_name: mailpit
+    restart: unless-stopped
+    volumes:
+      - ./data:/data
+    ports:
+      - 8025:8025
+      - 1025:1025
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
   # mongo:
   #   image: mongo:latest
@@ -39,3 +58,9 @@ services:
   #     MONGODB_PASSWORD: ${MONGODB_PASSWORD}
   #   volumes:
   #     - ./mongo/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
+
+networks:
+  default:
+  mongo_external_network:
+    external: true
+    name: mongo_network_name # Replace with the actual network name

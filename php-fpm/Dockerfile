@@ -10,8 +10,16 @@ RUN apk --update --no-cache add \
     libtool \
     tzdata \
     linux-headers \
-    && pecl install mongodb \
+    openssl-dev \
+    bash \
+    curl \
+    && pecl config-set php_ini /etc/php.ini \
+    && pecl install mongodb-1.21.0 \
     && docker-php-ext-enable mongodb
+
+# Install Symfony CLI
+RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.alpine.sh' | bash \
+    && apk add symfony-cli
 
 ENV TZ=Africa/Casablanca
 

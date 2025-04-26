@@ -1,0 +1,96 @@
+{% extends 'base.html.twig' %} {% block body %}
+<div class="login-container">
+  <div id="email-form">
+    <h2>Login with Email</h2>
+    <form id="request-code-form">
+      <div class="form-group">
+        <label for="email">Email address</label>
+        <input type="email" id="email" name="email" required />
+      </div>
+      <button type="submit" class="btn btn-primary">
+        Request Verification Code
+      </button>
+    </form>
+  </div>
+
+  <div id="verification-form" style="display: none">
+    <h2>Enter Verification Code</h2>
+    <p>A verification code has been sent to your email.</p>
+    <form id="verify-code-form">
+      <div class="form-group">
+        <label for="code">Verification Code</label>
+        <input type="text" id="code" name="code" required />
+      </div>
+      <button type="submit" class="btn btn-primary">Verify Code</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const redirectUrl = urlParams.get("redirect") || "/";
+  let userEmail = "";
+
+  document
+    .getElementById("request-code-form")
+    .addEventListener("submit", async function (e) {
+      e.preventDefault();
+      userEmail = document.getElementById("email").value;
+
+      try {
+        const response = await fetch("/api/auth/request-code", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: userEmail }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          document.getElementById("email-form").style.display = "none";
+          document.getElementById("verification-form").style.display = "block";
+        } else {
+          alert(data.error || "An error occurred");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred");
+      }
+    });
+
+  document
+    .getElementById("verify-code-form")
+    .addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const code = document.getElementById("code").value;
+
+      try {
+        const response = await fetch("/api/auth/verify-code", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: userEmail,
+            code: code,
+            redirectUrl: redirectUrl,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          console.log(data);
+          window.location.href = data.redirectUrl + "?token=" + data?.token;
+        } else {
+          alert(data.error || "An error occurred");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred");
+      }
+    });
+</script>
+{% endblock %}

@@ -1,25 +1,29 @@
 <?php
 
-namespace App\Security;
+namespace App\Document;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\GetCollection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 use Doctrine\ODM\MongoDB\Types\Type;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[MongoDB\Document]
-#[ApiResource()]
-class User implements UserInterface
+#[ApiResource(operations: [new GetCollection()], denormalizationContext: ['groups' => ['user:write']])]
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[MongoDB\Id]
     private $id;
 
     #[MongoDB\Field(type: Type::STRING)]
+    #[Groups(['user:write'])]
     private $email;
 
     #[MongoDB\Field(type: Type::INT)]
     private $verificationCode;
-    
+
     #[MongoDB\Field(type: Type::DATE_IMMUTABLE)]
     private $verificationCodeExpiredAt;
 
@@ -110,5 +114,14 @@ class User implements UserInterface
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
     }
-    
+
+    /**
+     * @see PasswordAuthenticatedUserInterface
+     */
+    public function getPassword(): string
+    {
+        // This method is required by PasswordAuthenticatedUserInterface
+        // Since we're not using passwords, we can return an empty string
+        return '';
+    }
 }

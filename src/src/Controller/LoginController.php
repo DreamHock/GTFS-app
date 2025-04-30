@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -15,8 +17,21 @@ class LoginController extends AbstractController
     }
 
     #[Route('/logout', name: 'app_logout')]
-    public function logout(): void
+    public function logout(Security $security): JsonResponse
     {
-        // This method can be empty - it will be intercepted by the logout key on your firewall
+
+        if (!$security->getUser()) {
+            return new JsonResponse([
+                'message' => 'You are not logged in',
+            ], 401);
+        }
+
+        $security->logout(false);
+        return new JsonResponse([
+            'message' => 'Logged out successfully',
+        ]);
     }
+
+    #[Route('/api/login_check', name: 'api_login_check')]
+    public function api_login() {}
 }

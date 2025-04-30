@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Api;
 
 use App\Document\User;
 use Doctrine\ODM\MongoDB\DocumentManager;
@@ -12,8 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+
 
 class AuthController extends AbstractController
 {
@@ -23,7 +22,7 @@ class AuthController extends AbstractController
         private MailerInterface $mailer,
     ) {}
 
-    #[Route('/api/auth/request-code', name: 'auth_request_code', methods: ['POST'])]
+    #[Route('/auth/request-code', name: 'auth_request_code', methods: ['POST'])]
     public function requestCode(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -35,7 +34,7 @@ class AuthController extends AbstractController
 
         // Find or create user
         $user = $this->documentManager->getRepository(User::class)->findOneBy(['email' => $email]);
-        
+
         if (!$user) {
             return $this->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
@@ -57,7 +56,7 @@ class AuthController extends AbstractController
         return $this->json(['message' => 'Verification code sent to your email']);
     }
 
-    #[Route('/api/auth/verify-code', name: 'auth_verify_code', methods: ['POST'])]
+    #[Route('/auth/verify-code', name: 'auth_verify_code', methods: ['POST'])]
     public function verifyCode(Request $request, JWTTokenManagerInterface $JWTTokenManager): JsonResponse
     {
         $data = json_decode($request->getContent(), true);

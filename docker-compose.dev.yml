@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     environment:
       - COMPOSER_MEMORY_LIMIT=-1
-      - MONGODB_URL=mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@172.27.0.2:27017/${MONGODB_DB}
+      - MONGODB_URL=${MONGODB_URL}
     volumes:
       - ./src:/var/www
       - ./src/var/cache:/var/www/var/cache
@@ -63,4 +63,4 @@ networks:
   default:
   mongo_external_network:
     external: true
-    name: mongo_network_name # Replace with the actual network name
+    name: mongodb-learning_default # Replace with the actual network name

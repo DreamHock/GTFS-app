@@ -3,5 +3,9 @@ controllers:
     path: ../src/Controller/
     namespace: App\Controller
   type: attribute
-api_login_check:
-  path: /api/login_check
+api_controllers:
+  resource: "../src/Controller/Api/"
+  type: attribute
+  prefix: "/api"
+# api_login_check:
+#   path: /api/login_check

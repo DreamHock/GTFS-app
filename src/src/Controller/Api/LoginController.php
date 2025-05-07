@@ -1,12 +1,15 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Api;
 
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class LoginController extends AbstractController
 {
@@ -17,7 +20,7 @@ class LoginController extends AbstractController
     }
 
     #[Route('/logout', name: 'app_logout')]
-    public function logout(Security $security): JsonResponse
+    public function logout(Security $security, Request $request, TokenStorageInterface $tokenStorageInterface, JWTTokenManagerInterface $jwtManager): JsonResponse
     {
 
         if (!$security->getUser()) {

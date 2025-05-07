@@ -5,6 +5,11 @@ api_platform:
     enabled: false
   doctrine_mongodb_odm:
     enabled: true
+  swagger:
+    api_keys:
+      JWT:
+        name: Authorization
+        type: header
   defaults:
     stateless: true
     cache_headers:

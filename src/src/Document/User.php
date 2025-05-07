@@ -4,6 +4,8 @@ namespace App\Document;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\GetCollection;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 use Doctrine\ODM\MongoDB\Types\Type;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -11,14 +13,20 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[MongoDB\Document]
-#[ApiResource(operations: [new GetCollection()], denormalizationContext: ['groups' => ['user:write']])]
+#[ApiResource(
+    operations: [new GetCollection()],
+    denormalizationContext: ['groups' => ['user:write']],
+    normalizationContext: ['groups' => ['user:read']],
+    security: "is_granted('ROLE_ADMIN')"
+)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[MongoDB\Id]
+    #[Groups(['user:read'])]
     private $id;
 
     #[MongoDB\Field(type: Type::STRING)]
-    #[Groups(['user:write'])]
+    #[Groups(['user:write', 'user:read'])]
     private $email;
 
     #[MongoDB\Field(type: Type::INT)]
@@ -28,10 +36,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private $verificationCodeExpiredAt;
 
     /**
-     * @var list<string> The user roles
+     * @var Collection<int, Role> The user roles
      */
-    #[MongoDB\Field(type: 'collection')]
-    private $roles = [];
+    #[MongoDB\ReferenceMany(targetDocument: Role::class, inversedBy: 'users', nullable: true)]
+    // #[Groups(['user:read'])]
+    private ?Collection $roles;
+
+    public function __construct()
+    {
+        $this->roles = new ArrayCollection();
+    }
 
     public function getId(): ?string
     {
@@ -65,21 +79,41 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      *
      * @return list<string>
      */
-    public function getRoles(): array
+    public function getRoles($string = false): array
     {
-        $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_USER';
+        $roleNames = $this->roles->map(function (Role $role) {
+            return $role->getName();
+        })->toArray();
 
-        return array_unique($roles);
+        // guarantee every user at least has ROLE_USER
+        if (!in_array('ROLE_USER', $roleNames)) {
+            $roleNames[] = 'ROLE_USER';
+        }
+
+        return array_unique($roleNames);
     }
 
     /**
-     * @param list<string> $roles
+     * @return Collection<int, Role>
      */
-    public function setRoles(array $roles): static
+    #[Groups(['user:read'])]
+    public function getRoleObjects(): Collection
     {
-        $this->roles = $roles;
+        return $this->roles;
+    }
+
+    public function addRole(Role $role): self
+    {
+        if (!$this->roles->contains($role)) {
+            $this->roles->add($role);
+        }
+
+        return $this;
+    }
+
+    public function removeRole(Role $role): self
+    {
+        $this->roles->removeElement($role);
 
         return $this;
     }
